@@ -1,10 +1,14 @@
 /*
  * logger.c
  *
- *  Created on: 03.01.2014
- *      Author: carsten
+ * Created on: 03.01.2014
+ * Last edited: 16.06.2017
+ *
+ * Author: racnets
  */
-#include <stdio.h>			//fopen, fprintf, printf
+
+#include <stdlib.h>    // EXIT_SUCCESS, EXIT_FAILURE
+#include <stdio.h>     // fopen, fprintf, printf
 #include <sys/time.h>
 
 #include "logger.h"
@@ -25,8 +29,8 @@ int setupLogger(const char* filename) {
 	t0 = getTime();
 
 	fd = fopen(filename, "w");
-	if (fd != NULL) return 0;
-	else return 1;
+	if (fd != NULL) return EXIT_SUCCESS;
+	else return EXIT_FAILURE;
 }
 
 void doLogging(int id, int mvCount) {

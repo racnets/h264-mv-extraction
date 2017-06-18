@@ -2,7 +2,8 @@
  * decoder.h
  *
  *  Created on: 22.12.2013
- *      Author: carsten
+ *
+ *  Author: racnets
  */
 
 #ifndef DECODER_H_

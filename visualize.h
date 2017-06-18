@@ -2,7 +2,8 @@
  * visualize.h
  *
  *  Created on: 03.01.2014
- *      Author: carsten
+ *  
+ *  Author: racnets
  */
 
 #ifndef VISUALIZE_H_

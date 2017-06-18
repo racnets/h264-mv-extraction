@@ -1,12 +1,14 @@
 /*
- * analyze.c
+ * analyse.c
  *
- *  Created on: 22.01.2014
- *      Author: carsten
+ * Created on: 22.01.2014
+ * Last edited: 16.06.2017
+ *
+ * Author: racnets
  */
-#include <stdio.h>			//fopen, fprintf, printf
-#include <sys/stat.h>		//mkdir
-#include <string.h>			//strlen
+#include <stdio.h>     //fopen, fprintf, printf
+#include <sys/stat.h>  //mkdir
+#include <string.h>    //strlen
 
 #include <libavformat/avformat.h>
 
@@ -30,7 +32,7 @@ int doAnalyse(AVFrame* frame, const char* file) {
 	FILE* fd = fopen(filename, "w");
 	if (fd == NULL) {
 		perror(filename);
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	int mb_width = (frame->width + 15) >> 4;

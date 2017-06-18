@@ -1,8 +1,10 @@
 /*
- * extractor.c
+ * decoder.c
  *
- *  Created on: 22.12.2013
- *      Author: carsten
+ * Created on: 22.12.2013
+ * Last edited: 16.06.2017
+ *
+ * Author: racnets
  */
 
 #include <stdio.h>
@@ -14,7 +16,7 @@
 AVFormatContext *pFormatCtx;
 AVCodecContext *videoDecCtx;
 AVCodec *videoCodec;
-AVPacket packet = {};
+AVPacket packet = {0};
 FILE *of = NULL;
 
 int videoStream;
@@ -34,7 +36,7 @@ int setupDecoder(const char *file, AVFrame **frame, int verbose) {
 	/* Open video file */
 	if (avformat_open_input(&pFormatCtx, file, NULL, NULL) != 0) {
 		fprintf(stderr, "Could not open source file %s\n", file);
-		exit(1);
+		return EXIT_FAILURE;
 	}
 
 	if (verbose) {
@@ -57,7 +59,7 @@ int setupDecoder(const char *file, AVFrame **frame, int verbose) {
 
 	if (videoStream == -1) {
 		fprintf(stderr, "Could not find any video stream\n");
-		exit(1);
+		return EXIT_FAILURE;
 	}
 
 	/***************************************************
@@ -69,7 +71,7 @@ int setupDecoder(const char *file, AVFrame **frame, int verbose) {
 	videoCodec = avcodec_find_decoder(videoDecCtx->codec_id);
 	if (videoCodec == NULL) {
 		fprintf(stderr, "Could not find decoder\n");
-		exit(1);
+		return EXIT_FAILURE;
 	}
 
 	/* Inform the codec that we can handle truncated bitstreams -- i.e.,
@@ -81,7 +83,7 @@ int setupDecoder(const char *file, AVFrame **frame, int verbose) {
 	/* Open codec */
 	if (avcodec_open2(videoDecCtx, videoCodec, NULL) < 0) {
 		fprintf(stderr, "Could not open decoder\n");
-		exit(1);
+		return EXIT_FAILURE;
 	} else {
 		if (verbose) {
 			printf("found decoder: %s\n", videoCodec->name);
@@ -105,34 +107,34 @@ int setupDecoder(const char *file, AVFrame **frame, int verbose) {
 	/* setup packet */
 	av_init_packet(&packet);
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
-int decodeFrame(AVFrame *frame) {
-
+int decodeFrame(AVFrame *frame)
+{
 	if (av_read_frame(pFormatCtx, &packet) >= 0) {
 		if (packet.stream_index == videoStream) {
-            int got_picture;
-            avcodec_decode_video2(videoDecCtx, frame, &got_picture, &packet);
-
+			int got_picture;
+			avcodec_decode_video2(videoDecCtx, frame, &got_picture, &packet);
 		}
-        if (of != NULL) {
-        	/* write output file */
-        	 fwrite(packet.data, 1, packet.size, of);
-        }
-		return 1;
+		if (of != NULL) {
+        		/* write output file */
+			fwrite(packet.data, 1, packet.size, of);
+		}
+		return EXIT_FAILURE;
 	} else {
 		/* clean up */
 		av_free_packet(&packet);
 		avcodec_close(videoDecCtx);
 		avformat_close_input(&pFormatCtx);
-        if (of != NULL) fclose(of);
-		return 0;
+		if (of != NULL) fclose(of);
+		return EXIT_SUCCESS;
 	}
 }
 
 int setupWriteThrough(const char* filename) {
-	 of = fopen(filename, "wb");
+	of = fopen(filename, "wb");
 
-	return 0;
+	if (of != NULL) return EXIT_SUCCESS;
+	else return EXIT_FAILURE;
 }

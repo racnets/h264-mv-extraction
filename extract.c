@@ -1,8 +1,10 @@
 /*
  * extract.c
  *
- *  Created on: 22.12.2013
- *      Author: carsten
+ * Created on: 22.12.2013
+ * Last edited: 16.06.2017
+ *
+ * Author: racnets
  */
 #include <stdio.h>
 

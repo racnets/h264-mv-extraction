@@ -1,14 +1,17 @@
 /*
  * i2c.c
  *
- *  Created on: 03.01.2014
- *      Author: carsten
+ * Created on: 03.01.2014
+ * Last edited: 16.06.2017
+ *
+ * Author: racnets
  */
 
-#include <unistd.h>			// read, write
-#include <linux/i2c-dev.h>	// I2C_SLAVE
-#include <fcntl.h>			//open
-#include <sys/ioctl.h>		// ioctl
+#include <stdlib.h>         // EXIT_SUCCESS, EXIT_FAILURE
+#include <unistd.h>         // read, write
+#include <linux/i2c-dev.h>  // I2C_SLAVE
+#include <fcntl.h>          //open
+#include <sys/ioctl.h>      // ioctl
 #include <stdint.h>
 
 int i2c = 0;
@@ -16,10 +19,10 @@ uint8_t buf[10];
 
 int i2cInit(const char* dev, int address) {
 	i2c = open(dev, O_RDWR);
-	if (i2c < 0) return 1;
+	if (i2c < 0) return EXIT_FAILURE;
 
-	if (ioctl(i2c, I2C_SLAVE, address)) return 1;
-	return 0;
+	if (ioctl(i2c, I2C_SLAVE, address)) return EXIT_FAILURE;
+	return EXIT_SUCCESS;
 }
 
 uint16_t i2cReadW(uint8_t address) {

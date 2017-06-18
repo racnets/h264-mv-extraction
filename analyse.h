@@ -2,7 +2,8 @@
  * analyse.h
  *
  *  Created on: 22.01.2014
- *      Author: carsten
+ *
+ *  Author: racnets
  */
 
 #ifndef ANALYSE_H_

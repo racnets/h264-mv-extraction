@@ -2,7 +2,8 @@
  * i2c.h
  *
  *  Created on: 03.01.2014
- *      Author: carsten
+ *
+ *  Author: racnets
  */
 
 #ifndef I2C_H_
