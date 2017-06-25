@@ -33,13 +33,13 @@ int setupLogger(const char* filename) {
 	else return EXIT_FAILURE;
 }
 
-void doLogging(int id, int mvCount) {
+void doLogging(int id, int mvCount, int mvCountZero, int mvCountNotZero, int mvSumX, int mvSumY) {
 	double t = getTime();
 
 	if (fd != NULL) {
-		fprintf(fd, "%d\t%u\t%u\t%u\t%u\t%u\t%f\t%d\n", id, i2cReadW(0x32), i2cReadW(0x76), i2cReadW(0x78), i2cReadW(0x72), i2cReadW(0x74), t - t0, mvCount);
+		fprintf(fd, "%d\t%u\t%u\t%u\t%u\t%u\t%f\t%d\t%d\t%d\t%d\t%d\n", id, i2cReadW(0x32), i2cReadW(0x76), i2cReadW(0x78), i2cReadW(0x72), i2cReadW(0x74), t - t0, mvCount, mvCountZero, mvCountNotZero, mvSumX, mvSumY);
 	} else {
-		printf("%d\t%u\t%u\t%u\t%u\t%u\t%f\t%d\n", id, i2cReadW(0x32), i2cReadW(0x76), i2cReadW(0x78), i2cReadW(0x72), i2cReadW(0x74), t - t0, mvCount);
+		printf("%d\t%u\t%u\t%u\t%u\t%u\t%f\t%d\t%d\t%d\t%d\t%d\n", id, i2cReadW(0x32), i2cReadW(0x76), i2cReadW(0x78), i2cReadW(0x72), i2cReadW(0x74), t - t0, mvCount, mvCountZero, mvCountNotZero, mvSumX, mvSumY);
 	}
 }
 

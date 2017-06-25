@@ -9,7 +9,7 @@ CC = gcc
 CFLAGS = -Wall 
 #CFLAGS +=-pedantic -O0 
 CFLAGS += -std=c99
-CFLAGS += -DDEBUG_VERBOSE
+#CFLAGS += -DDEBUG_VERBOSE
 LDFLAGS =
 LDLIBS =
 

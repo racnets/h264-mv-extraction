@@ -30,11 +30,11 @@
 
 GtkWidget* window;
 
-GtkAdjustment *result_adj;
-
 GtkWidget *pause_toggle;
 GtkWidget *next_toggle;
 GtkWidget *result_toggle;
+
+GtkWidget *result_label;
 
 GtkWidget *intra_colorbutton;
 GtkWidget *predicted_colorbutton;
@@ -213,12 +213,9 @@ int viewer_init(int *argc, char **argv[]) {
 	window = GTK_WIDGET(win);
 	g_signal_connect(win, "destroy", G_CALLBACK(gtk_widget_destroyed), &window);
 	
-	/* result slider */
-   	tmp_obj = gtk_builder_get_object(builder, "result_scale");
-	gtk_scale_add_mark(GTK_SCALE(tmp_obj), 0, GTK_POS_TOP, NULL);
-	gtk_scale_add_mark(GTK_SCALE(tmp_obj), 0, GTK_POS_BOTTOM, NULL);
-   	tmp_obj = gtk_builder_get_object(builder, "result_adjust");
-	result_adj = GTK_ADJUSTMENT(tmp_obj);
+	/* result label */
+   	tmp_obj = gtk_builder_get_object(builder, "result_label");
+	result_label = GTK_WIDGET(tmp_obj);
 	
 	/* AVFrame drawing area */
 	tmp_obj = gtk_builder_get_object(builder, "avFrame_draw-area");
@@ -382,7 +379,7 @@ void drawMv(cairo_surface_t *image, AVFrame *frame) {
  * @param *frame: AVFrame
  * @return EXIT_SUCCESS, EXIT_FAILURE
  */
-int viewer_set_avFrame(AVFrame *frame, int mvs) {
+int viewer_set_avFrame(AVFrame *frame, int mvs, double motX, double motY) {
 	debug_printf("called with *img: %#x \twidth: %d\theight: %d", (int)frame, frame->width, frame->height);
 	
 	/* if window was destroyed return */
@@ -406,6 +403,11 @@ int viewer_set_avFrame(AVFrame *frame, int mvs) {
 	drawMbType(avFrame_image, frame);
 	drawMv(avFrame_image, frame);
 
+	/* result label */
+	char _result_label_str[sizeof("/") + 2*strlen(DEFTOSTRING(INT_MAX))];
+	sprintf(_result_label_str, "%0.3f/%0.3f", motX, motY);
+	gtk_label_set_text(GTK_LABEL(result_label), _result_label_str);
+	
 	/* status bar */
 	/* picture number*/
 	char _frame_label_str[sizeof("frame: ") + strlen(DEFTOSTRING(INT_MAX))];
@@ -422,10 +424,10 @@ int viewer_set_avFrame(AVFrame *frame, int mvs) {
 	sprintf(_picture_type_label_str, "type: %c", av_get_picture_type_char(frame->pict_type));
 	gtk_statusbar_push(GTK_STATUSBAR(status_bar_3), gtk_statusbar_get_context_id(GTK_STATUSBAR(status_bar_3), "type"), _picture_type_label_str);
 
-	/* picture time stamp*/
-	char _mvs_label_str[sizeof("mvotion vectors: ") + strlen(DEFTOSTRING(INT_MAX))];
-	sprintf(_mvs_label_str, "mvotion vectors: %d", mvs);
-	gtk_statusbar_push(GTK_STATUSBAR(status_bar_4), gtk_statusbar_get_context_id(GTK_STATUSBAR(status_bar_4), "mvotion_vectors"), _mvs_label_str);
+	/* motion vectors */
+	char _mvs_label_str[sizeof("motion vectors: ") + strlen(DEFTOSTRING(INT_MAX))];
+	sprintf(_mvs_label_str, "motion vectors: %d", mvs);
+	gtk_statusbar_push(GTK_STATUSBAR(status_bar_4), gtk_statusbar_get_context_id(GTK_STATUSBAR(status_bar_4), "motion_vectors"), _mvs_label_str);
 
 	/* force redraw */
 	gtk_widget_queue_draw(window);

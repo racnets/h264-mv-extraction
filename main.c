@@ -2,7 +2,7 @@
  * main.c
  *
  * Created on:  23.12.2013
- * Last edited: 16.06.2017
+ * Last edited: 25.06.2017
  *
  * Author: racnets
  */
@@ -156,18 +156,22 @@ int main(int argc, char *argv[])
 	while (decodeFrame(frame) > 0) {
 		c++;
 		int mvAmount = 0;
-		if (analyse || visualize) mvAmount = doAnalyse(frame, analysisFilename);
+		int mvAmountZero = 0;
+		int mvAmountNotZero = 0;
+		double mvSumX = 0;
+		double mvSumY = 0;
+		if (analyse || visualize) doAnalyse(frame, analysisFilename, &mvAmount, &mvAmountZero, &mvAmountNotZero, &mvSumX, &mvSumY);
 #ifdef GTK_GUI
 		if (visualize) {
 			while (viewer_is_paused()) {
 				if (viewer_update() == EXIT_FAILURE) break;
 				//~ nanosleep((const struct timespec[]){{0, 500000000L}}, NULL);
 			}
-			if (viewer_set_avFrame(frame, mvAmount) == EXIT_FAILURE) break;
+			if (viewer_set_avFrame(frame, mvAmount, (float)mvSumX/mvAmountNotZero, (float)mvSumY/mvAmountNotZero) == EXIT_FAILURE) break;
 			if (viewer_update() == EXIT_FAILURE) break;
 		}
 #endif //GTK_GUI
-		doLogging(frame->coded_picture_number, mvAmount);
+		doLogging(frame->coded_picture_number, mvAmount, mvAmountZero, mvAmountNotZero, mvSumX, mvSumY);
 	}
 
 	/* timing evaluation */
