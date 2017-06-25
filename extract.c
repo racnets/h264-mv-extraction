@@ -20,7 +20,7 @@ int smb_stride;
 int smb_width;
 int smb_height;
 
-void setup(AVFrame* frame) {
+void setupAVFrame(AVFrame* frame) {
 	static int index = -1;
 
 	if (frame->coded_picture_number != index) {
@@ -61,13 +61,13 @@ char getMBTypeName(int type) {
 }
 
 char getMBTypeForMB(AVFrame* frame, int x, int y) {
-	setup(frame);
+	setupAVFrame(frame);
 
 	return getMBTypeName(frame->mb_type[mbIndex(x, y)]);
 }
 
 char getMBTypeForPixel(AVFrame* frame, int x, int y) {
-	setup(frame);
+	setupAVFrame(frame);
 
 	int mb_x = x >> 4;
 	int mb_y = y >> 4;
@@ -80,7 +80,7 @@ char getMBTypeForPixel(AVFrame* frame, int x, int y) {
  * return value equals number of summands for mb mv.
  */
 int getMVForMB(AVFrame* frame, int mb_x, int mb_y, int* mv_x, int* mv_y) {
-	setup(frame);
+	setupAVFrame(frame);
 
 	int mb_type = frame->mb_type[mbIndex(mb_x, mb_y)];
 

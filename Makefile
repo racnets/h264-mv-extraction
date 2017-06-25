@@ -1,37 +1,47 @@
 TARGET = h264-mv-extractor
 
-C_SRCS = analyse.c decoder.c extract.c i2c.c logger.c main.c visualize.c 
+C_SRCS = analyse.c decoder.c extract.c i2c.c logger.c main.c
+C_EXT = c
 
 libav = ../libav_custom
 
-C_CFLAGS = -Wall -pedantic -O0 -std=c99
-C_CFLAGS += -I.
-C_CFLAGS += -I$(libav)
-C_DFLAGS =
-C_DFLAGS += -DWITH_CV
-C_LDFLAGS = -lavformat -lavcodec -lavutil
-ifneq ($(libav),)
-	C_LDFLAGS += -L$(libav)/libavformat -L$(libav)/libavcodec -L$(libav)/libavutil
-	C_RTLPATH = -Wl,-rpath,$(libav)/libavformat -Wl,-rpath,$(libav)/libavcodec -Wl,-rpath,$(libav)/libavutil
+CC = gcc
+CFLAGS = -Wall 
+#CFLAGS +=-pedantic -O0 
+CFLAGS += -std=c99
+CFLAGS += -DDEBUG_VERBOSE
+LDFLAGS =
+LDLIBS =
+
+ifeq ($(libav),)
+$(error libav not found - target needs to be defined in the Makefile!)
+endif
+LDLIBS = -lavformat -lavcodec -lavutil
+CFLAGS += -I$(libav)
+LDLIBS += -L$(libav)/libavformat -L$(libav)/libavcodec -L$(libav)/libavutil
+LDFLAGS += -Wl,-rpath,$(libav)/libavformat -Wl,-rpath,$(libav)/libavcodec -Wl,-rpath,$(libav)/libavutil
+
+GUILIB = gtk+-3.0
+# add graphical output if supported by host system
+ifeq ($(shell pkg-config --exists $(GUILIB) && echo 1), 1)
+$(info library found - compiling with GUI)
+	C_SRCS += gtk-viewer.c
+	CFLAGS += `pkg-config --cflags $(GUILIB)` -D GTK_GUI
+	LDLIBS += `pkg-config --libs $(GUILIB)`
+else
+$(info no graphic library found - compiling without GUI)
 endif
 
-ifeq (WITH_CV, $(findstring WITH_CV, $(C_DFLAGS)))
- 	C_LDFLAGS += -lopencv_core -lopencv_highgui -lm
-#        C_CFLAGS += `pkg-config --cflags --libs opencv`  
-endif
-
-C_EXT = c
 
 C_OBJS = $(patsubst %.$(C_EXT), %.o, $(C_SRCS))
 
-C = gcc
 all: $(TARGET)
 
-$(TARGET): $(CPP_OBJS) $(C_OBJS)
-	$(C) $(C_CFLAGS) $(C_LDFLAGS) $(C_RTLPATH) `pkg-config --cflags --libs opencv`  -o $(TARGET) $(C_OBJS)
+$(TARGET): $(C_OBJS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(LDLIBS) -o $(TARGET) $(C_OBJS)
 
 $(C_OBJS): %.o: %.$(C_EXT)
-	$(C) $(C_CFLAGS) $(C_DFLAGS) $(C_LDFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) $(LDLIBS) -c $< -o $@
 
 clean:
 	$(RM) $(TARGET) $(C_OBJS)

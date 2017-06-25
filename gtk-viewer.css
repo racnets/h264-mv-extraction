@@ -1,0 +1,27 @@
+GtkFrame > * {
+	margin: 6px;
+}
+
+GtkGrid > * {
+	padding: 6px;
+}
+
+#status_bar > * {
+	padding: 6px;
+}
+
+#exposure_toggle {
+	color: red;
+}
+
+#pixel_clock_toggle {
+	color: green;
+}
+
+#brightness_toggle {
+	color: blue;
+}
+
+#result_toggle {
+	color: black;
+}

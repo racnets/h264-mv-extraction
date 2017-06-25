@@ -9,6 +9,7 @@
 
 #include <stdio.h>   // printf
 #include <getopt.h>  // getoptlong
+#include <unistd.h>  // usleep
 #include <time.h>
 
 #include <libavformat/avformat.h>
@@ -17,7 +18,9 @@
 #include "decoder.h"
 #include "extract.h"
 #include "logger.h"
-#include "visualize.h"
+#ifdef GTK_GUI
+#include "gtk-viewer.h"
+#endif //GTK_GUI
 
 const char *srcFilename = NULL;
 const char *logFilename = NULL;
@@ -26,6 +29,10 @@ const char *outputFilename = NULL;
 int visualize = 0;
 int analyse = 0;
 int verbose = 0;
+
+int is_verbose() {
+	return verbose;
+}
 
 static void print_usage(const char *prog)
 {
@@ -128,10 +135,16 @@ int main(int argc, char *argv[])
 	}
 
 	if (visualize) {
-		if (setupVisualize("motion")) {
+#ifdef GTK_GUI
+		/* set up GUI */
+		if (viewer_init(&argc, &argv) == EXIT_FAILURE) {
 			printf("error setting up visualisation\n");
 			return EXIT_FAILURE;
 		}
+#else
+		printf("no GUI supported for current host OS configuration\n");
+		visualize = 0;
+#endif //GTK_GUI
 	}
 
 	if (setupLogger(logFilename)) {
@@ -143,10 +156,17 @@ int main(int argc, char *argv[])
 	while (decodeFrame(frame) > 0) {
 		c++;
 		int mvAmount = 0;
-		if (analyse) mvAmount = doAnalyse(frame, analysisFilename);
+		if (analyse || visualize) mvAmount = doAnalyse(frame, analysisFilename);
+#ifdef GTK_GUI
 		if (visualize) {
-			if (doVisualize(frame)) break;
+			while (viewer_is_paused()) {
+				if (viewer_update() == EXIT_FAILURE) break;
+				//~ nanosleep((const struct timespec[]){{0, 500000000L}}, NULL);
+			}
+			if (viewer_set_avFrame(frame, mvAmount) == EXIT_FAILURE) break;
+			if (viewer_update() == EXIT_FAILURE) break;
 		}
+#endif //GTK_GUI
 		doLogging(frame->coded_picture_number, mvAmount);
 	}
 
@@ -156,7 +176,9 @@ int main(int argc, char *argv[])
 	float fps = c/seconds;
 	printf("decoded %d frames in: %d ticks(%f seconds) = %f fps\n", c, (int)duration, seconds, fps);
 
-	visualizeCleanUp();
+#ifdef GTK_GUI
+	//visualizeCleanUp();
+#endif //GTK_GUI
 	loggingCleanUp();
 
 	return EXIT_SUCCESS;
