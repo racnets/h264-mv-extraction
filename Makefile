@@ -27,7 +27,8 @@ ifeq ($(shell pkg-config --exists $(GUILIB) && echo 1), 1)
 $(info library found - compiling with GUI)
 	C_SRCS += gtk-viewer.c
 	CFLAGS += `pkg-config --cflags $(GUILIB)` -D GTK_GUI
-	LDLIBS += `pkg-config --libs $(GUILIB)`
+	LDLIBS += `pkg-config --libs $(GUILIB)` -lswscale -L$(libav)/libswscale
+	LDFLAGS += -Wl,-rpath,$(libav)/libswscale
 else
 $(info no graphic library found - compiling without GUI)
 endif

@@ -120,20 +120,6 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	AVFrame *frame;
-
-	if (setupDecoder(srcFilename, &frame, verbose)) {
-		printf("error setting up decoder for input: %s\n", srcFilename);
-		return EXIT_FAILURE;
-	}
-
-	if (outputFilename != NULL) {
-		if (setupWriteThrough(outputFilename)) {
-			printf("error setting up output: %s\n", outputFilename);
-			return EXIT_FAILURE;
-		}
-	}
-
 	if (visualize) {
 #ifdef GTK_GUI
 		/* set up GUI */
@@ -145,6 +131,20 @@ int main(int argc, char *argv[])
 		printf("no GUI supported for current host OS configuration\n");
 		visualize = 0;
 #endif //GTK_GUI
+	}
+
+	AVFrame *frame;
+
+	if (setupDecoder(srcFilename, &frame, verbose, visualize)) {
+		printf("error setting up decoder for input: %s\n", srcFilename);
+		return EXIT_FAILURE;
+	}
+
+	if (outputFilename != NULL) {
+		if (setupWriteThrough(outputFilename)) {
+			printf("error setting up output: %s\n", outputFilename);
+			return EXIT_FAILURE;
+		}
 	}
 
 	if (setupLogger(logFilename)) {

@@ -16,6 +16,7 @@
 #include <cairo.h>
 
 #include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
 
 #include "main.h"     //verbose, verpose_printf
 #include "extract.h"  //getMBTypeForMB
@@ -33,6 +34,9 @@ GtkWidget* window;
 GtkWidget *pause_toggle;
 GtkWidget *next_toggle;
 GtkWidget *result_toggle;
+GtkWidget *showVideo_toggle;
+GtkWidget *showType_toggle;
+GtkWidget *showMv_toggle;
 
 GtkWidget *result_label;
 
@@ -233,6 +237,18 @@ int viewer_init(int *argc, char **argv[]) {
 	tmp_obj = gtk_builder_get_object(builder, "result_toggle");
 	result_toggle = GTK_WIDGET(tmp_obj);
 
+	/* get show-video toggle-button */
+	tmp_obj = gtk_builder_get_object(builder, "show-video_toggle");
+	showVideo_toggle = GTK_WIDGET(tmp_obj);
+
+	/* get show-type toggle-button */
+	tmp_obj = gtk_builder_get_object(builder, "show-type_toggle");
+	showType_toggle = GTK_WIDGET(tmp_obj);
+
+	/* get show-mv toggle-button */
+	tmp_obj = gtk_builder_get_object(builder, "show-mv_toggle");
+	showMv_toggle = GTK_WIDGET(tmp_obj);
+
 	/* get intra colorbutton */
 	tmp_obj = gtk_builder_get_object(builder, "intra_colorbutton");
 	intra_colorbutton = GTK_WIDGET(tmp_obj);
@@ -294,13 +310,31 @@ int viewer_update() {
 	return EXIT_SUCCESS;
 }
 
+cairo_surface_t* drawFrame(const AVFrame *const frame) {
+	/* re-organize data sturcture */
+	/* use swscale to convert YUV to RGB */
+	/* since endian is handled different between libAV and cairo, the inverted format is used */
+	struct SwsContext *sctx = sws_getContext(frame->width, frame->height, frame->format, frame->width, frame->height, AV_PIX_FMT_BGRA, SWS_BICUBIC, NULL, NULL, NULL);
+	
+	AVPicture _frame_Rgb;
+	_frame_Rgb.linesize[0] = cairo_format_stride_for_width (CAIRO_FORMAT_ARGB32, frame->width);
+	_frame_Rgb.data[0] = (uint8_t*)malloc(_frame_Rgb.linesize[0] * frame->height);
+	sws_scale(sctx, (const uint8_t * const*)frame->data, frame->linesize, 0, frame->height, _frame_Rgb.data, _frame_Rgb.linesize);
+
+	/* clean up */
+	av_free(sctx);
+
+	return cairo_image_surface_create_for_data(_frame_Rgb.data[0], CAIRO_FORMAT_ARGB32, frame->width, frame->height, _frame_Rgb.linesize[0]);
+	//~ avpicture_free(&_frame_Rgb);
+}
+
 void drawMbType(cairo_surface_t *image, AVFrame *frame) {
 	int mb_width = (frame->width + 15) >> 4;
 	int mb_height = (frame->height + 15) >> 4;
 
 	cairo_t *cr = cairo_create(avFrame_image);
 	
-	cairo_set_source_rgb(cr, 255, 0, 0);
+	cairo_set_source_rgba(cr, 255, 0, 0, 0.1);
 	cairo_paint(cr);
 	
 	cairo_set_line_width(cr, 1);
@@ -314,26 +348,26 @@ void drawMbType(cairo_surface_t *image, AVFrame *frame) {
 			switch (getMBTypeForMB(frame, x, y)) {
 				case 'i':
 					/* intra 4x4 */
-					cairo_set_source_rgb(cr, 255, 255, 255);
+					cairo_set_source_rgba(cr, 255, 255, 255, 0.5);
 					break;
 				case 'I':
 					/* intra 16x16 */
-					cairo_set_source_rgb(cr, 200, 200, 200);
+					cairo_set_source_rgba(cr, 200, 200, 200, 0.5);
 					break;
 				case 'p':
 				case '-':
 				case '|':
 				case '+':
 					/* p-type mbs */
-					cairo_set_source_rgb(cr, 0, 255, 0);
+					cairo_set_source_rgba(cr, 0, 255, 0, 0.5);
 					break;
 				case 's':
 					/* skip */
-					cairo_set_source_rgb(cr, 255, 255, 0);
+					cairo_set_source_rgba(cr, 255, 255, 0, 0.5);
 					break;
 				default: 
 					/* other */
-					cairo_set_source_rgb(cr, 255, 0, 0);
+					cairo_set_source_rgba(cr, 255, 0, 0, 0.5);
 			}
 			cairo_rectangle(cr, x, y, 1, 1);
 			cairo_fill(cr);
@@ -398,10 +432,11 @@ int viewer_set_avFrame(AVFrame *frame, int mvs, double motX, double motY) {
 
 	/* create empty image */
 	debug_printf("create image of size: width: %d\theight: %d\tstride: %d\n", frame->width, frame->height, frame->linesize[0]);
-	avFrame_image = cairo_image_surface_create (CAIRO_FORMAT_RGB24, frame->width, frame->height);
+	avFrame_image = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, frame->width, frame->height);
 
-	drawMbType(avFrame_image, frame);
-	drawMv(avFrame_image, frame);
+	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(showVideo_toggle))) avFrame_image = drawFrame(frame);
+	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(showType_toggle))) drawMbType(avFrame_image, frame);
+	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(showMv_toggle))) drawMv(avFrame_image, frame);
 
 	/* result label */
 	char _result_label_str[sizeof("/") + 2*strlen(DEFTOSTRING(INT_MAX))];
