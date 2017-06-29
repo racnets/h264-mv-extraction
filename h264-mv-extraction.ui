@@ -8,8 +8,8 @@
     <property name="can_focus">False</property>
     <property name="title">linSen-connect</property>
     <property name="window_position">center</property>
-    <property name="default_width">400</property>
-    <property name="default_height">400</property>
+    <property name="default_width">800</property>
+    <property name="default_height">700</property>
     <child>
       <object class="GtkGrid" id="window_grid">
         <property name="visible">True</property>
@@ -76,7 +76,7 @@
                                 </child>
                                 <child>
                                   <object class="GtkToggleButton" id="result_toggle">
-                                    <property name="label" translatable="yes">result:</property>
+                                    <property name="label" translatable="yes">average:</property>
                                     <property name="sensitive">False</property>
                                     <property name="can_focus">False</property>
                                     <property name="receives_default">True</property>
@@ -98,7 +98,7 @@
                           <object class="GtkLabel" id="result-frame_label">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">result
+                            <property name="label" translatable="yes">global motion estimation
 </property>
                           </object>
                         </child>
