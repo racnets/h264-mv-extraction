@@ -27,6 +27,7 @@ const char *logFilename = NULL;
 const char *analysisFilename = NULL;
 const char *outputFilename = NULL;
 int visualize = 0;
+int experimental = 0;
 int analyse = 0;
 int verbose = 0;
 
@@ -42,6 +43,7 @@ static void print_usage(const char *prog)
 	     "  -o OUT  --output OUT     output to pass the input through\n"
 	     "  -f FILE --file FILE      log file to write to\n"
 	     "  -a[DIR] --analyse[=DIR]  analyse the incoming data (optional: set directory to write data for each frame)\n"
+	     "  -e      --experimental   enables experimental libAV-settings\n"
 	     "  -V      --visualize      visualize the analysed data\n"
 	     "  -v      --verbose        be verbose\n"
 	     "  -w      --werbose        be wery verbose\n");
@@ -55,19 +57,20 @@ static void parse_opts(int argc, char *argv[])
 
 	while (1) {
 		static const struct option lopts[] = {
-			{ "input",     1, 0, 'i' },
-			{ "output",    1, 0, 'o' },
-			{ "file",      1, 0, 'f' },
-			{ "help",      0, 0, 'h' },
-			{ "analyse",   2, 0, 'a' },
-			{ "visualize", 0, 0, 'V' },
-			{ "verbose",   0, 0, 'v' },
-			{ "werbose",   0, 0, 'w' },
+			{ "input",        1, 0, 'i' },
+			{ "output",       1, 0, 'o' },
+			{ "file",         1, 0, 'f' },
+			{ "help",         0, 0, 'h' },
+			{ "analyse",      2, 0, 'a' },
+			{ "experimental", 0, 0, 'e' },
+			{ "visualize",    0, 0, 'V' },
+			{ "verbose",      0, 0, 'v' },
+			{ "werbose",      0, 0, 'w' },
 			{ NULL, 0, 0, 0 },
 		};
 		int c;
 
-		c = getopt_long(argc, argv, "i:o:f:a::hVvw", lopts, NULL);
+		c = getopt_long(argc, argv, "i:o:f:a::hVvwe", lopts, NULL);
 
 		if (c == -1)
 			break;
@@ -82,6 +85,9 @@ static void parse_opts(int argc, char *argv[])
 			case 'a':
 				analyse = 1;
 				if (optarg) analysisFilename = optarg;
+				break;
+			case 'e':
+				experimental = 1;
 				break;
 			case 'V':
 				visualize = 1;
@@ -121,6 +127,11 @@ int main(int argc, char *argv[])
 	}
 
 	if (visualize) {
+		if (experimental) {
+			printf("in experimental mode no visualisation is possible\n");
+			printf("disable visualization\n");
+			visualize = 0;
+		}
 #ifdef GTK_GUI
 		/* set up GUI */
 		if (viewer_init(&argc, &argv) == EXIT_FAILURE) {
@@ -129,13 +140,13 @@ int main(int argc, char *argv[])
 		}
 #else
 		printf("no GUI supported for current host OS configuration\n");
-		visualize = 0;
+//		visualize = 0;
 #endif //GTK_GUI
 	}
 
 	AVFrame *frame;
 
-	if (setupDecoder(srcFilename, &frame, verbose, visualize)) {
+	if (setupDecoder(srcFilename, &frame, verbose, experimental)) {
 		printf("error setting up decoder for input: %s\n", srcFilename);
 		return EXIT_FAILURE;
 	}
@@ -147,7 +158,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (setupLogger(logFilename)) {
+	if (setupLogger(logFilename) == EXIT_FAILURE) {
+		printf("error setting up log file: %s\n", logFilename);
 	}
 
 	/* timings */

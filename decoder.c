@@ -21,7 +21,7 @@ FILE *of = NULL;
 
 int videoStream;
 
-int setupDecoder(const char *file, AVFrame **frame, int verbose, int visualize) {
+int setupDecoder(const char *file, AVFrame **frame, int verbose, int experimental) {
 
 	pFormatCtx = NULL;
 	videoDecCtx = NULL;
@@ -100,7 +100,7 @@ int setupDecoder(const char *file, AVFrame **frame, int verbose, int visualize) 
 //	videoDecCtx->debug |= FF_DEBUG_MV;
 //	videoDecCtx->debug |= FF_DEBUG_STARTCODE;
 
-	if (!visualize) {
+	if (experimental) {
 		videoDecCtx->experimental_mode = 0;
 		videoDecCtx->experimental_mode |= DECODE_MV_ONLY;
 		videoDecCtx->experimental_mode |= DISABLE_DEBLOCKING_FILTER;

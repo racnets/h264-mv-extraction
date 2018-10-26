@@ -24,7 +24,7 @@ do
 	inData=$(dirname $f)/$(basename $f .h264).dat
 	outData=$(dirname $f)/$outSubDir/$(basename $f .h264).dat
 	# program call
-	program="./h264-mv-extractor $f -a -l $outData"
+	program="./h264-mv-extractor -i $f -a -f $outData"
 	echo "$program"
 	eval $program
 	# get header from dataset
