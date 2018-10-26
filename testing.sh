@@ -26,7 +26,7 @@ profiles=(high)
 
 #servo stuff
 #speeds=(0x00 0x01 0x02 0x04 0x06 0x08 0x10 0x12 0x14 0x16 0x18 0x20)
-speeds=(0x00 0x10)
+speeds=(0x00)
 minPos=$(i2cget -y 0 0x18 0x34 w)
 
 for res in "${!widths[@]}"
@@ -54,7 +54,7 @@ do
 				
 				id="setRes$w""x$h""_speed$s""_$pf""_$f""fps"
 			
-				program="raspivid -n -v -vf -hf -pf $pf -fps $f -w $w -h $h -t 10000 -o - | ./h264-mv-extractor pipe: -o $path/$id.h264 -l $path/$id.dat"
+				program="raspivid -n -v -vf -hf -pf $pf -fps $f -w $w -h $h -t 10000 -o - | ./h264-mv-extractor -i pipe: -o $path/$id.h264 -f $path/$id.dat"
 				
 				echo "$program"
 				eval $program
