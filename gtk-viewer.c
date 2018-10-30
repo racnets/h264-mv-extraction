@@ -311,6 +311,8 @@ int viewer_update() {
 }
 
 cairo_surface_t* drawFrame(const AVFrame *const frame) {
+	debug_printf("called\n");	
+	
 	/* re-organize data sturcture */
 	/* use swscale to convert YUV to RGB */
 	/* since endian is handled different between libAV and cairo, the inverted format is used */
@@ -329,6 +331,8 @@ cairo_surface_t* drawFrame(const AVFrame *const frame) {
 }
 
 void drawMbType(cairo_surface_t *image, AVFrame *frame) {
+	debug_printf("called\n");
+
 	int mb_width = (frame->width + 15) >> 4;
 	int mb_height = (frame->height + 15) >> 4;
 
@@ -378,6 +382,8 @@ void drawMbType(cairo_surface_t *image, AVFrame *frame) {
 }
 
 void drawMv(cairo_surface_t *image, AVFrame *frame) {
+	debug_printf("called\n");
+
 	int mb_width = (frame->width + 15) >> 4;
 	int mb_height = (frame->height + 15) >> 4;
 

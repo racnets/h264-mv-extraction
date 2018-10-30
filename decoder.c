@@ -13,6 +13,8 @@
 #include <libavcodec/avcodec.h>
 #include <libavutil/avutil.h>
 
+#include "main.h"
+
 AVFormatContext *pFormatCtx;
 AVCodecContext *videoDecCtx;
 AVCodec *videoCodec;
@@ -85,9 +87,7 @@ int setupDecoder(const char *file, AVFrame **frame, int verbose, int experimenta
 		fprintf(stderr, "Could not open decoder\n");
 		return EXIT_FAILURE;
 	} else {
-		if (verbose) {
-			printf("found decoder: %s\n", videoCodec->name);
-		}
+		verbose_printf("found decoder: %s\n", videoCodec->name);
 	}
 
 	/* allocate AVFrame structure */
@@ -114,24 +114,37 @@ int setupDecoder(const char *file, AVFrame **frame, int verbose, int experimenta
 
 int decodeFrame(AVFrame *frame)
 {
-	if (av_read_frame(pFormatCtx, &packet) >= 0) {
+	// get next frame
+	if (av_read_frame(pFormatCtx, &packet) >= 0) {		
+		// decode frame
+		int got_picture;
 		if (packet.stream_index == videoStream) {
-			int got_picture;
 			avcodec_decode_video2(videoDecCtx, frame, &got_picture, &packet);
 		}
-		if (of != NULL) {
-        		/* write output file */
-			fwrite(packet.data, 1, packet.size, of);
+		
+		if (got_picture) {	
+			if (of != NULL) {
+				/* write output file */
+				fwrite(packet.data, 1, packet.size, of);
+			}
+			return EXIT_FAILURE;
+		} else {
+			fprintf(stderr, "error decoding frame\n");			
+			if (frame->format == AV_PIX_FMT_NONE ) {
+				fprintf(stderr, "unknown pixel format\n");			
+			}
+			if (frame->mb_type == NULL) {
+				fprintf(stderr, "missing motion informations\n");			
+			}
 		}
-		return EXIT_FAILURE;
-	} else {
-		/* clean up */
-		av_free_packet(&packet);
-		avcodec_close(videoDecCtx);
-		avformat_close_input(&pFormatCtx);
-		if (of != NULL) fclose(of);
-		return EXIT_SUCCESS;
-	}
+	} 
+	
+	/* clean up */
+	av_free_packet(&packet);
+	avcodec_close(videoDecCtx);
+	avformat_close_input(&pFormatCtx);
+	if (of != NULL) fclose(of);
+	return EXIT_SUCCESS;
 }
 
 int setupWriteThrough(const char* filename) {

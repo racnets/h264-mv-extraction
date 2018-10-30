@@ -26,6 +26,7 @@ void setupAVFrame(AVFrame* frame) {
 	if (frame->coded_picture_number != index) {
 		/* get codec context from frame */
 		AVCodecContext *codecCtx = frame->owner;
+		
 		/* get frame size in macroblocks */
 		mb_width = (codecCtx->width + 15) >> 4;
 		mb_height = (codecCtx->height + 15) >> 4;
@@ -82,6 +83,9 @@ char getMBTypeForPixel(AVFrame* frame, int x, int y) {
 int getMVForMB(AVFrame* frame, int mb_x, int mb_y, int* mv_x, int* mv_y) {
 	setupAVFrame(frame);
 
+	// since this is deprecated no all files has this info anymore
+	if (frame->mb_type == NULL) return 0;
+	
 	int mb_type = frame->mb_type[mbIndex(mb_x, mb_y)];
 
 	if (mb_type & (MB_TYPE_L0L1 | MB_TYPE_SKIP)) {

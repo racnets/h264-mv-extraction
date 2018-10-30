@@ -24,11 +24,12 @@
 
 const char *srcFilename = NULL;
 const char *logFilename = NULL;
-const char *analysisFilename = NULL;
+const char *extractFilename = NULL;
 const char *outputFilename = NULL;
 int visualize = 0;
 int experimental = 0;
 int analyse = 0;
+int extract = 0;
 int verbose = 0;
 
 int is_verbose() {
@@ -42,8 +43,9 @@ static void print_usage(const char *prog)
 	     "  -i IN   --input IN       \"pipe:N\" for numbered piped input\n"
 	     "  -o OUT  --output OUT     output to pass the input through\n"
 	     "  -f FILE --file FILE      log file to write to\n"
-	     "  -a[DIR] --analyse[=DIR]  analyse the incoming data (optional: set directory to write data for each frame)\n"
-	     "  -e      --experimental   enables experimental libAV-settings\n"
+	     "  -a      --analyse        analyse the motion data\n"
+	     "  -e[DIR] --extract[=DIR]  extract the motion vector data (optional: set directory to write data for each frame)\n"
+	     "  -x      --experimental   enables experimental libAV-settings\n"
 	     "  -V      --visualize      visualize the analysed data\n"
 	     "  -v      --verbose        be verbose\n"
 	     "  -w      --werbose        be wery verbose\n");
@@ -61,8 +63,9 @@ static void parse_opts(int argc, char *argv[])
 			{ "output",       1, 0, 'o' },
 			{ "file",         1, 0, 'f' },
 			{ "help",         0, 0, 'h' },
-			{ "analyse",      2, 0, 'a' },
-			{ "experimental", 0, 0, 'e' },
+			{ "analyse",      0, 0, 'a' },
+			{ "extract",      2, 0, 'e' },
+			{ "experimental", 0, 0, 'x' },
 			{ "visualize",    0, 0, 'V' },
 			{ "verbose",      0, 0, 'v' },
 			{ "werbose",      0, 0, 'w' },
@@ -70,7 +73,7 @@ static void parse_opts(int argc, char *argv[])
 		};
 		int c;
 
-		c = getopt_long(argc, argv, "i:o:f:a::hVvwe", lopts, NULL);
+		c = getopt_long(argc, argv, "e:f:i:o::ahVvwx", lopts, NULL);
 
 		if (c == -1)
 			break;
@@ -84,9 +87,12 @@ static void parse_opts(int argc, char *argv[])
 				break;
 			case 'a':
 				analyse = 1;
-				if (optarg) analysisFilename = optarg;
 				break;
 			case 'e':
+				extract = 1;
+				if (optarg) extractFilename = optarg;
+				break;
+			case 'x':
 				experimental = 1;
 				break;
 			case 'V':
@@ -172,7 +178,7 @@ int main(int argc, char *argv[])
 		int mvAmountNotZero = 0;
 		double mvSumX = 0;
 		double mvSumY = 0;
-		if (analyse || visualize) doAnalyse(frame, analysisFilename, &mvAmount, &mvAmountZero, &mvAmountNotZero, &mvSumX, &mvSumY);
+		if (analyse || extract || visualize) doAnalyse(frame, extractFilename, analyse, &mvAmount, &mvAmountZero, &mvAmountNotZero, &mvSumX, &mvSumY);
 #ifdef GTK_GUI
 		if (visualize) {
 			while (viewer_is_paused()) {

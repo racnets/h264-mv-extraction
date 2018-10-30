@@ -153,7 +153,9 @@ int evaluateList(mv_freq_list_type* element, int *mv0, int *mvn0, double *mvX, d
 	return EXIT_SUCCESS;
 }
 
-int doAnalyse(AVFrame *frame, const char* dir, int *mvCount, int *mv0, int *mvn0, double *mvX, double *mvY) {
+int doAnalyse(AVFrame *frame, const char* dir, int analyse, int *mvCount, int *mv0, int *mvn0, double *mvX, double *mvY) {
+	FILE* fd = NULL;
+	FILE* fd_mvf = NULL;
 	debug_printf("called");
 	
 	char* filename = NULL;
@@ -163,28 +165,25 @@ int doAnalyse(AVFrame *frame, const char* dir, int *mvCount, int *mv0, int *mvn0
 		mkdir(dir, 0777);
 		filename = malloc(strlen(dir) + sizeof("/frame_.dat") + strlen(DEFTOSTRING(INT_MAX)));
 		sprintf(filename, "%s/frame_%d.dat", dir, frame->coded_picture_number);
-		filename_mv_freq = malloc(strlen(dir) + sizeof("/frame-mv-freq_.dat") + strlen(DEFTOSTRING(INT_MAX)));
-		sprintf(filename_mv_freq, "%s/frame-mv-freq_%d.dat", dir, frame->coded_picture_number);
-	} else {
-		mkdir("mvAnalysis", 0777);
-		filename = malloc(sizeof("mvAnalysis/frame_.dat") + strlen(DEFTOSTRING(INT_MAX)));
-		sprintf(filename, "mvAnalysis/frame_%d.dat", frame->coded_picture_number);
-		filename_mv_freq = malloc(sizeof("mvAnalysis/frame-mv-freq_.dat") + strlen(DEFTOSTRING(INT_MAX)));
-		sprintf(filename_mv_freq, "mvAnalysis/frame-mv-freq_%d.dat", frame->coded_picture_number);
+
+		fd = fopen(filename, "w");
+		if (fd == NULL) {
+			perror(filename);
+			return EXIT_FAILURE;
+		}
+
+		if (analyse) {
+			filename_mv_freq = malloc(strlen(dir) + sizeof("/frame-mv-freq_.dat") + strlen(DEFTOSTRING(INT_MAX)));
+			sprintf(filename_mv_freq, "%s/frame-mv-freq_%d.dat", dir, frame->coded_picture_number);
+
+			fd_mvf = fopen(filename_mv_freq, "w");
+			if (fd_mvf == NULL) {
+				perror(filename_mv_freq);
+				return EXIT_FAILURE;
+			}
+		}
 	}
 
-	FILE* fd = fopen(filename, "w");
-	if (fd == NULL) {
-		perror(filename);
-		return EXIT_FAILURE;
-	}
-
-	FILE* fd_mvf = fopen(filename_mv_freq, "w");
-	if (fd_mvf == NULL) {
-		perror(filename_mv_freq);
-		return EXIT_FAILURE;
-	}
-	
 	
 	int _mv0 = 0;
 	int _mvn0 = 0;
@@ -201,17 +200,19 @@ int doAnalyse(AVFrame *frame, const char* dir, int *mvCount, int *mv0, int *mvn0
 		for (mb_x=0; mb_x< mb_width; mb_x++) {
 			if (getMVForMB(frame, mb_x, mb_y, &mv_x, &mv_y)) {
 				count++;
-				fprintf(fd, "%d\t%d\t%d\t%d\n", mb_x, mb_y, mv_x, mv_y);
-				head = updateList(head, mv_x, mv_y);
+				if (fd) fprintf(fd, "%d\t%d\t%d\t%d\n", mb_x, mb_y, mv_x, mv_y);
+				if (analyse) head = updateList(head, mv_x, mv_y);
 			}
 		}
 	}
-
-	evaluateList(head, &_mv0, &_mvn0, &_mvX, &_mvY);
-	printAndFreeList(head, fd_mvf);
 	
-	fclose(fd);
-	fclose(fd_mvf);
+	if (analyse) {
+		evaluateList(head, &_mv0, &_mvn0, &_mvX, &_mvY);
+		if (fd) printAndFreeList(head, fd_mvf);
+	}
+	
+	if (fd) fclose(fd);
+	if (fd_mvf) fclose(fd_mvf);
 
 	if (mvCount != NULL) *mvCount = count;
 	if (mv0 != NULL) *mv0 = _mv0;
