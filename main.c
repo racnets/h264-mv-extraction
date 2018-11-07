@@ -73,7 +73,7 @@ static void parse_opts(int argc, char *argv[])
 		};
 		int c;
 
-		c = getopt_long(argc, argv, "e:f:i:o::ahVvwx", lopts, NULL);
+		c = getopt_long(argc, argv, "e::f:i:o:ahVvwx", lopts, NULL);
 
 		if (c == -1)
 			break;
@@ -83,7 +83,7 @@ static void parse_opts(int argc, char *argv[])
 				srcFilename = optarg;
 				break;
 			case 'o':
-				logFilename = optarg;
+				outputFilename = optarg;
 				break;
 			case 'a':
 				analyse = 1;
